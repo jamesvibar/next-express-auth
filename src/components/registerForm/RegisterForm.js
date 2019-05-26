@@ -1,5 +1,6 @@
 import React from 'react'
 import { Form, Icon, Input, Button } from 'antd'
+import axios from 'axios'
 
 function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field])
@@ -23,9 +24,19 @@ function RegisterForm({ form }) {
 
   const handleSubmit = e => {
     e.preventDefault()
-    form.validateFields((err, values) => {
+    form.validateFields(async (err, values) => {
       if (!err) {
-        console.log('Form submit!', values)
+        const { username, email, password } = values
+
+        const newUser = {
+          username,
+          email,
+          password,
+        }
+
+        const result = await axios.post('/api/v1/auth/signup', newUser)
+
+        console.log('Form submit!', result)
       }
     })
   }
@@ -70,19 +81,6 @@ function RegisterForm({ form }) {
           <Input
             prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,0.4)' }} />}
             placeholder="Password"
-          />
-        )}
-      </Form.Item>
-      <Form.Item
-        validateStatus={passwordError ? 'error' : ''}
-        help={passwordError || ''}
-      >
-        {getFieldDecorator('password2', {
-          rules: [{ required: true, message: 'Please confirm your password' }],
-        })(
-          <Input
-            prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,0.4)' }} />}
-            placeholder="Confirm Password"
           />
         )}
       </Form.Item>

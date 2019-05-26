@@ -28,27 +28,41 @@ const newLocalStrategyOptions = {
   passwordField: 'password',
 }
 
-const newLocalStrategy = new LocalStrategy(newLocalStrategyOptions, async (username, password, done) => {
-  try {
-    // Find the username
-    const user = await User.findOne({
-      username, // username: username
-    })
+const newLocalStrategy = new LocalStrategy(
+  newLocalStrategyOptions,
+  async (username, password, done) => {
+    try {
+      // Find the username
+      const user = await User.findOne({
+        username, // username: username
+      })
 
-    // User not found
-    if (!user) {
+      // User not found
+      if (!user) {
+        return done(null, false, {
+          message: 'Incorrect credentials',
+        })
+      }
+
+      bcrypt.compare(password, user.password, function(err, res) {
+        // Password does not match
+        if (err) {
+          return done(null, false, {
+            message: 'Incorrect credentials',
+          })
+        }
+
+        return done(null, user)
+      })
+    } catch (err) {
       done(null, false, {
-        message: 'Incorrect credentials'
+        message: 'Failed',
       })
     }
-
-    bcrypt.compare(password, user.password, function(err))
-  } catch(err) {
-    done(null, false, {
-      message: 'Failed',
-    })
   }
-})
+)
+
+passport.use(newLocalStrategy)
 
 app.prepare().then(async () => {
   const server = express()
