@@ -1,7 +1,11 @@
 const express = require('express')
-const mongoose = require('mongoose')
 const next = require('next')
 const api = require('./api')
+const passport = require('passport')
+const LocalStrategy = require('passport-local').Strategy
+const connectDatabase = require('./lib/db')
+const bcrypt = require('bcrypt')
+const User = require('./models/User')
 
 const dev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 3000
@@ -9,26 +13,51 @@ const port = process.env.PORT || 3000
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
-// Get dotenv environment variables if NODE_ENV !== 'production'
+// Get .env variables if development
 if (dev) {
   require('dotenv').config()
 }
 
-// Connect to mongodb database
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-})
+// Connect to MongoDB database
+connectDatabase()
 
-const db = mongoose.connection
-db.on('error', console.error.bind(console, 'connection error:'))
-db.once('open', function() {
-  console.log('Connected to mongodb database')
+// Setup passport local strategy
+
+const newLocalStrategyOptions = {
+  usernameField: 'email',
+  passwordField: 'password',
+}
+
+const newLocalStrategy = new LocalStrategy(newLocalStrategyOptions, async (username, password, done) => {
+  try {
+    // Find the username
+    const user = await User.findOne({
+      username, // username: username
+    })
+
+    // User not found
+    if (!user) {
+      done(null, false, {
+        message: 'Incorrect credentials'
+      })
+    }
+
+    bcrypt.compare(password, user.password, function(err))
+  } catch(err) {
+    done(null, false, {
+      message: 'Failed',
+    })
+  }
 })
 
 app.prepare().then(async () => {
   const server = express()
 
   server.use(express.json())
+  server.use(express.urlencoded({ extended: false }))
+
+  // Add passport middleware
+  server.use(passport.initialize())
 
   // Create api routes
   api(server)

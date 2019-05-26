@@ -48,11 +48,11 @@ exports.signup = async (req, res) => {
     const user = new User({
       username,
       email,
-      password, 
+      password,
     })
 
     // Generate a salt
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10)
     // Hash password with salt
     user.password = await bcrypt.hash(password, salt)
     // Save user
@@ -77,7 +77,7 @@ exports.validateLogin = [
     .isEmpty(),
   check('password', 'Please input your password')
     .not()
-    .isEmpty()
+    .isEmpty(),
 ]
 
 /**
@@ -95,9 +95,13 @@ exports.login = async (req, res) => {
     const { email, password } = req.body
 
     const user = await User.findOne({ email })
+    const match = await bcrypt.compare(password, user.password)
 
-    res.json(user);
-
+    if (!match) {
+      res.status(400).json({ error: 'Incorrect username or password' })
+    } else {
+      res.json({ success: true })
+    }
   } catch (err) {
     res.status(400).json({ error: err.message || err.toString() })
   }
