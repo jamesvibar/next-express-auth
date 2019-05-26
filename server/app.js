@@ -9,8 +9,13 @@ const port = process.env.PORT || 3000
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
+// Get dotenv environment variables if NODE_ENV !== 'production'
+if (dev) {
+  require('dotenv').config()
+}
+
 // Connect to mongodb database
-mongoose.connect('mongodb://localhost:27017/next-express-auth', {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
 })
 
