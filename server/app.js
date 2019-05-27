@@ -34,26 +34,28 @@ const newLocalStrategy = new LocalStrategy(
     try {
       // Find the username
       const user = await User.findOne({
-        username, // username: username
+        email: username, // username: username
       })
 
       // User not found
       if (!user) {
         return done(null, false, {
-          message: 'Incorrect credentials',
+          message: 'Username not found',
         })
       }
 
-      bcrypt.compare(password, user.password, function(err, res) {
-        // Password does not match
-        if (err) {
-          return done(null, false, {
-            message: 'Incorrect credentials',
-          })
-        }
+      console.log('outside bcrypt')
+      console.log(`password: ${password}`)
+      console.log(`hash: ${user.password}`)
+      const match = await bcrypt.compare(password, user.password)
 
+      if (!match) {
+        return done(null, false, {
+          message: 'Incorrect password',
+        })
+      } else {
         return done(null, user)
-      })
+      }
     } catch (err) {
       done(null, false, {
         message: 'Failed',
@@ -63,6 +65,28 @@ const newLocalStrategy = new LocalStrategy(
 )
 
 passport.use(newLocalStrategy)
+
+passport.serializeUser((user, done) => {
+  return done(null, user.id)
+})
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findOne({
+      where: {
+        id: id,
+      },
+    })
+
+    if (!user) {
+      return done(null, false, { message: 'User does not exist' })
+    }
+
+    return done(null, user)
+  } catch (err) {
+    return done(null, false, { message: 'Failed' })
+  }
+})
 
 app.prepare().then(async () => {
   const server = express()

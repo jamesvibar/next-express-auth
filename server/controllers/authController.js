@@ -1,4 +1,5 @@
 const { check, validationResult } = require('express-validator/check')
+const passport = require('passport')
 const bcrypt = require('bcrypt')
 const User = require('../models/User')
 
@@ -71,7 +72,7 @@ exports.signup = async (req, res) => {
  * @param {string} password
  * @param {string} password2
  */
-exports.validateLogin = [
+exports.validateSignin = [
   check('email', 'Please input your email address')
     .not()
     .isEmpty(),
@@ -85,24 +86,41 @@ exports.validateLogin = [
  * @param {string} usernameOrEmail
  * @param {string} password
  */
-exports.login = async (req, res) => {
-  try {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() })
+exports.signin = async (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return res.status(500).json(err.message)
+    }
+    if (!user) {
+      return res.status(400).json(info.message)
     }
 
-    const { email, password } = req.body
+    req.logIn(user, err => {
+      if (err) {
+        return res.status(500).json(err.message)
+      }
 
-    const user = await User.findOne({ email })
-    const match = await bcrypt.compare(password, user.password)
+      res.json(user)
+    })
+  })(req, res, next)
 
-    if (!match) {
-      res.status(400).json({ error: 'Incorrect username or password' })
-    } else {
-      res.json({ success: true })
-    }
-  } catch (err) {
-    res.status(400).json({ error: err.message || err.toString() })
-  }
+  // try {
+  //   const errors = validationResult(req)
+  //   if (!errors.isEmpty()) {
+  //     return res.status(422).json({ errors: errors.array() })
+  //   }
+
+  //   const { email, password } = req.body
+
+  //   const user = await User.findOne({ email })
+  //   const match = await bcrypt.compare(password, user.password)
+
+  //   if (!match) {
+  //     res.status(400).json({ error: 'Incorrect username or password' })
+  //   } else {
+  //     res.json({ success: true })
+  //   }
+  // } catch (err) {
+  //   res.status(400).json({ error: err.message || err.toString() })
+  // }
 }
