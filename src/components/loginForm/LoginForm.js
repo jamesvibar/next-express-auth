@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, Icon, Input, Button } from 'antd'
+import { Form, Icon, Input, Button, Alert } from 'antd'
 import axios from 'axios'
 
 function hasErrors(fieldsError) {
@@ -7,6 +7,8 @@ function hasErrors(fieldsError) {
 }
 
 function LoginForm({ form }) {
+  const [status, setStatus] = React.useState(null)
+
   const {
     getFieldDecorator,
     getFieldsError,
@@ -32,19 +34,45 @@ function LoginForm({ form }) {
           password,
         }
 
-        console.log(values)
-
-        const result = await axios.post('/api/v1/auth/signin', formValues)
-
-        console.log('Logging in!', result)
+        try {
+          const result = await axios.post('/api/v1/auth/signin', formValues)
+          setStatus({
+            name: 'Success :D',
+            message: 'You have successfully logged in!',
+            type: 'success',
+          })
+          console.log('Logging in!', result)
+        } catch (e) {
+          setStatus({
+            name: 'Error :C',
+            message: 'Incorrect username or password',
+            type: 'error',
+          })
+        }
       }
     })
   }
+
+  const onClose = e => {
+    setStatus(null)
+  }
+
   return (
     <Form
       onSubmit={handleSubmit}
       style={{ maxWidth: '400px', margin: '0 auto' }}
     >
+      {status && (
+        <Form.Item>
+          <Alert
+            message={status.name}
+            description={status.message}
+            type={status.type}
+            closable
+            onClose={onClose}
+          />
+        </Form.Item>
+      )}
       <Form.Item
         validateStatus={emailError ? 'error' : ''}
         help={emailError || ''}
