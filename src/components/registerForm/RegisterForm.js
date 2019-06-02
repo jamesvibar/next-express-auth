@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, Icon, Input, Button } from 'antd'
+import { Form, Icon, Input, Button, Alert } from 'antd'
 import axios from 'axios'
 
 function hasErrors(fieldsError) {
@@ -7,6 +7,8 @@ function hasErrors(fieldsError) {
 }
 
 function RegisterForm({ form }) {
+  const [status, setStatus] = React.useState(null)
+
   const {
     getFieldDecorator,
     getFieldsError,
@@ -34,17 +36,45 @@ function RegisterForm({ form }) {
           password,
         }
 
-        const result = await axios.post('/api/v1/auth/signup', newUser)
-
-        console.log('Form submit!', result)
+        try {
+          const result = await axios.post('/api/v1/auth/signup', newUser)
+          setStatus({
+            name: 'Success :D',
+            message: `Created a new account with email ${email}`,
+            type: 'success',
+          })
+          console.log('Creating user account', result)
+        } catch (e) {
+          setStatus({
+            name: 'Error :C',
+            message: 'Username or email already exists.',
+            type: 'error',
+          })
+        }
       }
     })
   }
+
+  const onClose = e => {
+    setStatus(null)
+  }
+
   return (
     <Form
       onSubmit={handleSubmit}
       style={{ maxWidth: '400px', margin: '0 auto' }}
     >
+      {status && (
+        <Form.Item>
+          <Alert
+            message={status.name}
+            description={status.message}
+            type={status.type}
+            closable
+            onClose={onClose}
+          />
+        </Form.Item>
+      )}
       <Form.Item
         validateStatus={usernameError ? 'error' : ''}
         help={usernameError || ''}
