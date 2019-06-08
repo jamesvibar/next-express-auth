@@ -2,6 +2,10 @@ const express = require('express')
 const next = require('next')
 const api = require('./api')
 const passport = require('passport')
+const session = require('express-session')
+const cookieParser = require('cookie-parser')
+const mongoose = require('mongoose')
+const MongoStore = require('connect-mongo')(session)
 const LocalStrategy = require('passport-local').Strategy
 const connectDatabase = require('./lib/db')
 const bcrypt = require('bcrypt')
@@ -44,9 +48,6 @@ const newLocalStrategy = new LocalStrategy(
         })
       }
 
-      console.log('outside bcrypt')
-      console.log(`password: ${password}`)
-      console.log(`hash: ${user.password}`)
       const match = await bcrypt.compare(password, user.password)
 
       if (!match) {
@@ -73,9 +74,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findOne({
-      where: {
-        id: id,
-      },
+      _id: id,
     })
 
     if (!user) {
@@ -94,16 +93,44 @@ app.prepare().then(async () => {
   server.use(express.json())
   server.use(express.urlencoded({ extended: false }))
 
+  // Session config
+  const sessionConfig = {
+    name: 'next-express-auth.sid',
+    secret: process.env.SESSION_SECRET,
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      ttl: 14 * 24 * 60 * 60,
+    }),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 14, // expires in 14 days
+    },
+  }
+
+  // Apply session config
+  server.use(session(sessionConfig))
+
   // Add passport middleware
   server.use(passport.initialize())
+  server.use(passport.session())
 
   // Create api routes
   api(server)
+
+  // Middleware to put req.user object to res.locals
+  server.use((req, res, next) => {
+    res.locals.user = req.user || null
+    next()
+  })
 
   // Give all nextjs requests to server
   server.get('*', (req, res) => {
     handle(req, res)
   })
+
+  server.get('')
 
   server.listen(port, err => {
     if (err) throw err

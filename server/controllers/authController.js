@@ -66,28 +66,12 @@ exports.signup = async (req, res) => {
 }
 
 /**
- * Middleware for validating signup fields
- * @param {string} username
- * @param {string} email
- * @param {string} password
- * @param {string} password2
- */
-exports.validateSignin = [
-  check('email', 'Please input your email address')
-    .not()
-    .isEmpty(),
-  check('password', 'Please input your password')
-    .not()
-    .isEmpty(),
-]
-
-/**
  * Login user
  * @param {string} usernameOrEmail
  * @param {string} password
  */
 exports.signin = async (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('local', { session: true }, (err, user, info) => {
     if (err) {
       return res.status(500).json(err.message)
     }
@@ -103,24 +87,4 @@ exports.signin = async (req, res, next) => {
       res.json(user)
     })
   })(req, res, next)
-
-  // try {
-  //   const errors = validationResult(req)
-  //   if (!errors.isEmpty()) {
-  //     return res.status(422).json({ errors: errors.array() })
-  //   }
-
-  //   const { email, password } = req.body
-
-  //   const user = await User.findOne({ email })
-  //   const match = await bcrypt.compare(password, user.password)
-
-  //   if (!match) {
-  //     res.status(400).json({ error: 'Incorrect username or password' })
-  //   } else {
-  //     res.json({ success: true })
-  //   }
-  // } catch (err) {
-  //   res.status(400).json({ error: err.message || err.toString() })
-  // }
 }
