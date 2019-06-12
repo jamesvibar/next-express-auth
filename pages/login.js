@@ -7,9 +7,9 @@ const { Title } = Typography
 
 export default function Login() {
   return (
-    <SiteLayout>
+    <React.Fragment>
       <Title style={{ textAlign: 'center' }}>Login account</Title>
       <LoginForm />
-    </SiteLayout>
+    </React.Fragment>
   )
 }

@@ -8,9 +8,9 @@ const { Title } = Typography
 
 export default function Register() {
   return (
-    <SiteLayout>
+    <React.Fragment>
       <Title style={{ textAlign: 'center' }}>Create new account</Title>
       <RegisterForm />
-    </SiteLayout>
+    </React.Fragment>
   )
 }

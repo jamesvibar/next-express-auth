@@ -4,23 +4,12 @@ import { getSessionFromServer, getUserScript } from '../lib/auth'
 
 export default class MyDocument extends Document {
   static getInitialProps = ctx => {
+    // Get logged in user from server if there's any
     const user = getSessionFromServer(ctx.req)
 
-    // console.log(user)
-
-    let pageContext
-    const page = ctx.renderPage(Component => {
-      const WrappedComponent = props => {
-        pageContext = props.pageContext
-        return <Component {...props} />
-      }
-      return WrappedComponent
-    })
-
+    // Return found user as prop
     return {
       ...user,
-      ...page,
-      pageContext,
     }
   }
 

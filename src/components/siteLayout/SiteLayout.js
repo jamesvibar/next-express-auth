@@ -3,14 +3,14 @@ const { Footer, Content } = Layout
 
 import SiteHeader from './SiteHeader'
 
-export default function SiteLayout({ children }) {
+export default function SiteLayout(props) {
   return (
     <Layout>
-      <SiteHeader />
+      <SiteHeader {...props} />
 
       <Content style={{ padding: '0 50px', marginTop: '50px' }}>
         <div style={{ backgroundColor: '#FFF', padding: 24, minHeight: 280 }}>
-          {children}
+          {props.children}
         </div>
       </Content>
 
