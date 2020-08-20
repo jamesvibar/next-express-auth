@@ -12,7 +12,7 @@
     "antd": "^3.18.2",
     "axios": "^0.18.0",
     "babel-plugin-import": "^1.11.2",
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^5.0.0",
     "connect-mongo": "^2.0.3",
     "cookie-parser": "^1.4.4",
     "dotenv": "^8.0.0",
